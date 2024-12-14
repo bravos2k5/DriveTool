@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Objects;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Setter
@@ -17,24 +17,24 @@ public class Directory {
 
     private Directory parentFolder;
 
-    private TreeMap<String, Directory> subFolders;
+    private ConcurrentHashMap<String, Directory> subFolders;
 
-    private TreeMap<String, FileItem> files;
+    private ConcurrentHashMap<String, FileItem> files;
 
     public Directory(String name, File file, Directory parentFolder) {
         this.file = file;
         this.parentFolder = parentFolder;
         this.name = name;
-        this.subFolders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        this.files = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.subFolders = new ConcurrentHashMap<>();
+        this.files = new ConcurrentHashMap<>();
     }
 
     public Directory(String name, File file) {
         this.file = file;
         this.parentFolder = null;
         this.name = name;
-        this.subFolders = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        this.files = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        this.subFolders = new ConcurrentHashMap<>();
+        this.files = new ConcurrentHashMap<>();
     }
 
     public Directory addSubFolder(String name, File file) {
@@ -55,7 +55,7 @@ public class Directory {
         return addSubFolder(directory.getName(), directory.getFile());
     }
 
-    public FileItem addFile(File file, String name, boolean override) {
+    public void addFile(String name, File file, boolean override) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Folder name and driveId mustn't empty");
         }
@@ -65,7 +65,7 @@ public class Directory {
         }
 
         FileItem fileItem = new FileItem(name, file, this);
-        return files.put(name, fileItem);
+        files.put(name, fileItem);
     }
 
     public Directory getFolder(String name) {

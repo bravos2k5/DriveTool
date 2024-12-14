@@ -1,7 +1,6 @@
 package com.bravos2k5.drivetool.core.model;
 
 import com.google.api.services.drive.model.File;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -10,10 +9,8 @@ import lombok.Setter;
 @Setter
 public class FileItem {
 
-    @NonNull
     private String name;
 
-    @NonNull
     private File file;
 
     private Directory parentFolder;
@@ -32,9 +29,16 @@ public class FileItem {
 
     public String getAbsolutePath() {
         if(parentFolder == null) {
-            return "/";
+            return name;
         }
         return parentFolder.getAbsolutePath() + "/" + name;
+    }
+
+    public String getParentPath() {
+        if(parentFolder == null) {
+            return "/";
+        }
+        return parentFolder.getAbsolutePath();
     }
 
 }
