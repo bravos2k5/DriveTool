@@ -7,6 +7,8 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -44,20 +46,23 @@ public class DownloadService {
     private void downloadFile(FileItem file) {
         try {
             java.io.File f = new java.io.File(file.getParentPath());
-            f.mkdirs();
-            try(OutputStream outputStream = new FileOutputStream(file.getAbsolutePath())) {
+            if (f.mkdirs()) {
+                System.out.println("Khởi tạo thư mục " + f.getAbsolutePath());
+            }
+            try(OutputStream outputStream = Files.newOutputStream(Paths.get(file.getAbsolutePath()))) {
                 service.files().get(file.getFile().getId()).executeMediaAndDownloadTo(outputStream);
-                System.out.println("Đã tải xong: " + file.getAbsolutePath());
-                return;
+                System.out.println("Tải xuống thành công: " + file.getAbsolutePath());
             }
         } catch (IOException e) {
-            System.err.println("Lỗi khi tải file: " + file.getAbsolutePath());
+            System.err.println("Lỗi khi tải xuống: " + file.getAbsolutePath());
         }
     }
 
-    private List<String> getLinksFromFile(String filePath) throws IOException {
-        new java.io.File(filePath).createNewFile();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+    private List<String> getLinksFromFile() throws IOException {
+        if (new java.io.File("download-url.txt").createNewFile()) {
+            System.out.println("Tạo mới file download-url.txt");
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader("download-url.txt"))) {
             List<String> links = new ArrayList<>();
             String data;
             while ((data = reader.readLine()) != null) {
@@ -70,12 +75,13 @@ public class DownloadService {
     }
 
     private Directory createVirtualDirectory(String path) {
-        List<String> urlList = null;
+        List<String> urlList;
         try {
-            urlList = getLinksFromFile("download-url.txt");
+            urlList = getLinksFromFile();
         } catch (IOException e) {
-            System.err.println("Xảy ra lỗi khi đọc file download-url.txt");
+            throw new RuntimeException("Sự cố xảy ra khi đọc file download-url.txt");
         }
+
         Directory vDirectory = new Directory(path, null, null);
 
         for (String url : urlList) {
@@ -135,13 +141,14 @@ public class DownloadService {
         List<FileItem> largeSizeFile = new ArrayList<>();
         handleClassifyFiles(virtualDirectory, miniSizeFile, largeSizeFile);
         if (!miniSizeFile.isEmpty()) {
-            try (ExecutorService executorService = Executors.newFixedThreadPool(Math.min(miniSizeFile.size(), 8))) {
+            try {
+                ExecutorService executorService = Executors.newFixedThreadPool(Math.min(miniSizeFile.size(), 8));
                 for (FileItem item : miniSizeFile) {
                     executorService.submit(() -> downloadFile(item));
                 }
                 executorService.shutdown();
                 if (!executorService.awaitTermination(999,TimeUnit.DAYS)) {
-                    throw new RuntimeException("Lỗi tải xuống!");
+                    throw new RuntimeException("Error when downloading");
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -168,17 +175,18 @@ public class DownloadService {
     }
 
     public void start(String destination) {
-        System.out.println("Đang chuẩn bị dữ liệu tải xuống, vui lòng chờ...");
+        System.out.println("Đang chuẩn bị dữ liệu tải xuống...");
         Directory virtualDirectory = createVirtualDirectory(destination);
         long totalSize = virtualDirectory.getSize();
-        System.out.println("Tổng dung lượng là: " + totalSize / 1024 + " MB");
+        System.out.println("Tổng dung lượng sẽ tải xuống: " + totalSize / 1024 + " MB");
         if(new java.io.File(destination).getUsableSpace() / 1024 <= totalSize) {
-            System.err.println("Không đủ dung lượng để tải xuống, giải phóng bớt dung lượng và thử lại");
+            System.err.println("Bạn không đủ dung lượng để tải xuống rồi!");
+            return;
         }
         long startTime = System.currentTimeMillis();
         fastDownload(virtualDirectory);
         long endTime = System.currentTimeMillis();
-        System.out.println(endTime - startTime + " ms");
+        System.out.println("Hoàn tất tải xuống toàn bộ file trong " + (endTime - startTime) + " ms");
     }
 
 }

@@ -13,17 +13,20 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DriveAuthenticator {
 
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String CREDENTIALS_FILE_PATH = "credentials.json";
-    private static final List<String> SCOPES = List.of("https://www.googleapis.com/auth/drive");
+    private static List<String> SCOPES;
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private Credential credential;
 
     private DriveAuthenticator() throws Exception {
+        SCOPES = new ArrayList<>();
+        SCOPES.add("https://www.googleapis.com/auth/drive");
         credential = authorize();
     }
 
@@ -46,7 +49,6 @@ public class DriveAuthenticator {
         try {
 
             if(credential.getAccessToken() == null) {
-                System.err.println("Đã hết hạn, hãy đăng nhập lại");
                 new File("tokens").delete();
                 credential = authorize();
             }

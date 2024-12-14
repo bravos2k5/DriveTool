@@ -4,6 +4,7 @@ import com.google.api.services.drive.model.File;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -38,7 +39,7 @@ public class Directory {
     }
 
     public Directory addSubFolder(String name, File file) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Folder name and driveId mustn't empty");
         }
 
@@ -56,7 +57,7 @@ public class Directory {
     }
 
     public void addFile(String name, File file, boolean override) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Folder name and driveId mustn't empty");
         }
 
@@ -69,14 +70,14 @@ public class Directory {
     }
 
     public Directory getFolder(String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Folder name mustn't empty");
         }
         return subFolders.get(name);
     }
 
     public FileItem getFile(String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("File name mustn't empty");
         }
         return files.get(name);
@@ -90,14 +91,14 @@ public class Directory {
     }
 
     public void deleteFile(String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("File name mustn't empty");
         }
         files.remove(name);
     }
 
     public void deleteFolder(String name) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Folder name mustn't empty");
         }
         subFolders.remove(name);
@@ -105,10 +106,10 @@ public class Directory {
 
     public long getSize() {
         long size = 0;
-        for (var file : files.entrySet()) {
+        for (Map.Entry<String,FileItem> file : files.entrySet()) {
             size += file.getValue().getFile().getSize();
         }
-        for (var folder : subFolders.entrySet()) {
+        for (Map.Entry<String,Directory> folder : subFolders.entrySet()) {
             size += folder.getValue().getSize();
         }
         return size;

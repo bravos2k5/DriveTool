@@ -1,0 +1,2 @@
+Manifest-Version: 1.0
+Main-Class: com.bravos2k5.drivetool.core.Main
