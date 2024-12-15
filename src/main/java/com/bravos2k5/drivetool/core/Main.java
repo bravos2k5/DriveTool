@@ -1,42 +1,46 @@
 package com.bravos2k5.drivetool.core;
 
 import com.bravos2k5.drivetool.core.service.DownloadService;
+import com.bravos2k5.drivetool.core.service.DriveAuthenticator;
+import com.bravos2k5.drivetool.core.service.UploadService;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
 
-    public static void main(String[] args) {
+    private static final Scanner scanner = new Scanner(System.in);
 
+    public static void main(String[] args) {
         if (!new File("credentials.json").exists()) {
             System.err.println("Không tìm thấy file credentials.json, làm theo hướng dẫn và thử lại");
             return;
         }
 
-        Scanner scanner = new Scanner(System.in);
-
         while (true) {
             printMenu();
 
             try {
-                int choice = Integer.parseInt(scanner.nextLine());
+                String input = scanner.nextLine().trim();
+                int choice = Integer.parseInt(input);
 
                 switch (choice) {
                     case 1:
                         download();
-                        System.out.print("Ấn phím bất kỳ để tiếp tục...");
+                        System.out.print("Ấn phím Enter để tiếp tục...");
                         scanner.nextLine();
                         break;
                     case 2:
                         upload();
-                        System.out.print("Ấn phím bất kỳ để tiếp tục...");
+                        System.out.print("Ấn phím Enter để tiếp tục...");
                         scanner.nextLine();
                         break;
                     case 3:
-                        logOut();
-                        clearScreen();
+                        DriveAuthenticator.getInstance().logOut();
                         break;
                     case 0:
                         System.out.println("Thoát chương trình. Tạm biệt!");
@@ -52,7 +56,7 @@ public class Main {
     }
 
     public static void printMenu() {
-        clearScreen();
+        clearConsole();
         System.out.println("===== DRIVE TOOL =====");
         System.out.println("1. Tải xuống");
         System.out.println("2. Tải lên");
@@ -62,59 +66,78 @@ public class Main {
     }
 
     public static void download() {
-        clearScreen();
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        fileChooser.showDialog(null,"Select");
+        fileChooser.showDialog(null, "Select");
         if (fileChooser.getSelectedFile() != null && fileChooser.getSelectedFile().canWrite()) {
             String path = fileChooser.getSelectedFile().getAbsolutePath();
             DownloadService downloadService = new DownloadService();
             downloadService.start(path);
             System.gc();
-        }
-        else{
+        } else {
             System.err.println("Bạn chưa chọn đường dẫn hoặc không có quyền ghi dữ liệu vào đường dẫn này");
         }
     }
 
     public static void upload() {
-        clearScreen();
+        List<String> uploadFiles = getUploadFiles();
+        if(!uploadFiles.isEmpty()) {
+            UploadService uploadService = new UploadService();
+            String folderUrl = null;
+
+            System.out.print("Nhập url thư mục google drive để tải lên (có thể bỏ trống): ");
+            folderUrl = scanner.nextLine().trim();
+            if(folderUrl.isEmpty()) {
+                System.out.println("Không chọn thư mục tải lên sẽ mặc định trong drive của tôi");
+            }
+
+            uploadService.start(uploadFiles, folderUrl.isEmpty() ? null : folderUrl);
+        }
+    }
+
+    public static List<String> getUploadFiles() {
+        List<String> selectedPaths = new ArrayList<>();
+
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
-        fileChooser.setDialogTitle("Chọn file để tải lên");
-
-        int result = fileChooser.showDialog(null, "Tải lên");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fileChooser.setDialogTitle("Chọn file hoặc thư mục để tải lên");
+        int result = fileChooser.showDialog(null, "Chọn");
 
         if (result == JFileChooser.APPROVE_OPTION) {
             File[] selectedFiles = fileChooser.getSelectedFiles();
 
             if (selectedFiles.length > 0) {
-                System.out.println("Các file được chọn để tải lên:");
+
                 for (File file : selectedFiles) {
-                    System.out.println(file.getAbsolutePath());
+                    selectedPaths.add(file.getAbsolutePath());
                 }
 
-                System.out.println("Chức năng tải lên đang được phát triển.");
+                System.out.println("Các đường dẫn được chọn để tải lên:");
+                for (String path : selectedPaths) {
+                    System.out.println(path);
+                }
+
             } else {
                 System.out.println("Không có file nào được chọn.");
             }
         } else {
             System.out.println("Hủy tải lên.");
         }
+
+        return selectedPaths;
     }
 
-    public static void logOut() {
-        File file = new File("tokens/StoredCredential");
-        file.setWritable(true);
-        if (file.delete()) {
-            System.out.println("Đã đăng xuất");
-        }
-    }
-
-    public static void clearScreen() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
+    public static void clearConsole() {
+        final String os = System.getProperty("os.name");
+        try {
+            if (os.contains("Windows")) {
+                Runtime.getRuntime().exec("cls");
+            } else {
+                Runtime.getRuntime().exec("clear");
+            }
+        } catch (IOException ignored) {}
     }
 
 }

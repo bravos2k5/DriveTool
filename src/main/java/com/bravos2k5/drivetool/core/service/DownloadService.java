@@ -179,7 +179,7 @@ public class DownloadService {
         Directory virtualDirectory = createVirtualDirectory(destination);
         long totalSize = virtualDirectory.getSize();
         System.out.println("Tổng dung lượng sẽ tải xuống: " + totalSize / 1024 / 1024 + " MB");
-        if(new java.io.File(destination).getFreeSpace() / 1024 / 1024 <= totalSize / 1024 / 1024) {
+        if(new java.io.File(destination).getFreeSpace() <= totalSize) {
             System.err.println("Bạn không đủ dung lượng để tải xuống rồi!");
             return;
         }

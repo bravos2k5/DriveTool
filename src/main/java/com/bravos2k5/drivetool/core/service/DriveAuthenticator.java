@@ -14,19 +14,18 @@ import com.google.api.services.drive.Drive;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DriveAuthenticator {
 
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String CREDENTIALS_FILE_PATH = "credentials.json";
-    private static List<String> SCOPES;
+    private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/drive");
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
     private Credential credential;
 
     private DriveAuthenticator() throws Exception {
-        SCOPES = new ArrayList<>();
-        SCOPES.add("https://www.googleapis.com/auth/drive");
         credential = authorize();
     }
 
@@ -49,9 +48,7 @@ public class DriveAuthenticator {
         try {
 
             if(credential.getAccessToken() == null) {
-                File file = new File("tokens/StoredCredential");
-                file.setWritable(true);
-                file.delete();
+                this.logOut();
                 credential = authorize();
             }
 
@@ -72,6 +69,12 @@ public class DriveAuthenticator {
                 .setDataStoreFactory(new FileDataStoreFactory(new File(TOKENS_DIRECTORY_PATH)))
                 .build();
         return new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver()).authorize("user");
+    }
+
+    public void logOut() {
+        File file = new File("tokens/StoredCredential");
+        file.setWritable(true);
+        file.delete();
     }
 
 }
