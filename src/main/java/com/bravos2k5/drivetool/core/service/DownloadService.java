@@ -51,7 +51,7 @@ public class DownloadService {
             }
             try(OutputStream outputStream = Files.newOutputStream(Paths.get(file.getAbsolutePath()))) {
                 service.files().get(file.getFile().getId()).executeMediaAndDownloadTo(outputStream);
-                System.out.println("Tải xuống thành công: " + file.getAbsolutePath());
+                System.out.println("Tải xuống thành công: " + file.getFile().getName() + " (" + file.getFile().getSize() / 1024 + " KB)");
             }
         } catch (IOException e) {
             System.err.println("Lỗi khi tải xuống: " + file.getAbsolutePath());

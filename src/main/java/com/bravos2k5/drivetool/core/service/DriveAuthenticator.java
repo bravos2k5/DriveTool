@@ -49,7 +49,9 @@ public class DriveAuthenticator {
         try {
 
             if(credential.getAccessToken() == null) {
-                new File("tokens").delete();
+                File file = new File("tokens/StoredCredential");
+                file.setWritable(true);
+                file.delete();
                 credential = authorize();
             }
 

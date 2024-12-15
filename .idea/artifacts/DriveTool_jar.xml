@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="DriveTool:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/DriveTool_jar</output-path>
-    <root id="archive" name="DriveTool.jar">
+    <root id="archive" name="DriveTool_jar.jar">
       <element id="module-output" name="DriveTool" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/oauth-client/google-oauth-client-java6/1.36.0/google-oauth-client-java6-1.36.0.jar" path-in-jar="/" />
