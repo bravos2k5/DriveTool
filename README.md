@@ -1,4 +1,5 @@
 # Google Drive API Downloader/Uploader Tool
+# Need JRE/JDK version 8+
 ## Hướng Dẫn Lấy Credentials (Obtaining Credentials)
 
 ### Bước 1: Truy Cập Google Cloud Console
