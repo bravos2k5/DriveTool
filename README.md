@@ -35,6 +35,8 @@
   https://drive.google.com/file/d/link2
   https://drive.google.com/file/d/link3
   ```
+- Chọn đường dẫn lưu file
+- Ngồi ăn bánh uống trà đợi tải xong
 
 ### Tải Lên (Upload)
 - Sử dụng FileChooser để chọn file/thư mục
@@ -78,6 +80,7 @@
   https://drive.google.com/file/d/link2
   https://drive.google.com/file/d/link3
   ```
+- Select destination to save files
 
 ### Upload
 - Use FileChooser to select files/folders
