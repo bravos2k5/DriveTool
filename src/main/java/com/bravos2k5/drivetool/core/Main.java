@@ -6,7 +6,6 @@ import com.bravos2k5.drivetool.core.service.UploadService;
 
 import javax.swing.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -130,14 +129,16 @@ public class Main {
     }
 
     public static void clearConsole() {
-        final String os = System.getProperty("os.name");
         try {
+            String os = System.getProperty("os.name");
             if (os.contains("Windows")) {
-                Runtime.getRuntime().exec("cls");
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             } else {
-                Runtime.getRuntime().exec("clear");
+                new ProcessBuilder("clear").inheritIO().start().waitFor();
             }
-        } catch (IOException ignored) {}
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
     }
 
 }
