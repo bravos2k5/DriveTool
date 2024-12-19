@@ -1,4 +1,5 @@
 # Google Drive API Downloader/Uploader Tool
+# Need JRE/JDK version 8+
 ## Hướng Dẫn Lấy Credentials (Obtaining Credentials)
 
 ### Bước 1: Truy Cập Google Cloud Console
@@ -25,6 +26,7 @@
 ## Chức Năng Ứng Dụng (Application Features)
 
 ### Tải Xuống (Download)
+- Chạy file run.bat
 - Mở file `download-url.txt`
 - Dán các đường link Google Drive
 - Mỗi link được ngăn cách bằng dấu xuống dòng
@@ -34,8 +36,11 @@
   https://drive.google.com/file/d/link2
   https://drive.google.com/file/d/link3
   ```
+- Chọn đường dẫn lưu file
+- Ngồi ăn bánh uống trà đợi tải xong
 
 ### Tải Lên (Upload)
+- Chạy file run.bat
 - Sử dụng FileChooser để chọn file/thư mục
 - Nhấn nút "Select" để bắt đầu quá trình tải lên
 
@@ -68,6 +73,7 @@
 ## Application Features
 
 ### Download
+- Open run.bat
 - Open `download-url.txt`
 - Paste Google Drive links
 - Separate links with line breaks
@@ -77,8 +83,10 @@
   https://drive.google.com/file/d/link2
   https://drive.google.com/file/d/link3
   ```
+- Select destination to save files
 
 ### Upload
+- Open run.bat
 - Use FileChooser to select files/folders
 - Press "Select" button to start upload process
 
