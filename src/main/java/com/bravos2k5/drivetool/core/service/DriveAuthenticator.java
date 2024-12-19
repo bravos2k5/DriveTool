@@ -47,7 +47,7 @@ public class DriveAuthenticator {
     public Drive getDrive() {
         try {
 
-            if(credential.getAccessToken() == null) {
+            if(credential == null || credential.getAccessToken() == null) {
                 this.logOut();
                 credential = authorize();
             }
@@ -75,6 +75,7 @@ public class DriveAuthenticator {
         File file = new File("tokens/StoredCredential");
         file.setWritable(true);
         file.delete();
+        credential = null;
     }
 
 }
