@@ -27,7 +27,7 @@ public class UploadService {
 
     private String extractIdFolderFromUrl(String url) {
 
-        if (!url.matches("(https?://drive\\.google\\.com/drive/folders/.*)")) {
+        if (!url.matches("(https?://drive\\.google\\.com/drive/.*)")) {
             throw new IllegalArgumentException("Invalid URL");
         }
 

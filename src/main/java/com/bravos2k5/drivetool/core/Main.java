@@ -83,7 +83,7 @@ public class Main {
         List<String> uploadFiles = getUploadFiles();
         if(!uploadFiles.isEmpty()) {
             UploadService uploadService = new UploadService();
-            String folderUrl = null;
+            String folderUrl;
 
             System.out.print("Nhập url thư mục google drive để tải lên (có thể bỏ trống): ");
             folderUrl = scanner.nextLine().trim();

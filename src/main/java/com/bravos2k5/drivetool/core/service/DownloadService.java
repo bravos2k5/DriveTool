@@ -10,10 +10,10 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,11 +50,12 @@ public class DownloadService {
                 System.out.println("Khởi tạo thư mục " + f.getAbsolutePath());
             }
             try(OutputStream outputStream = Files.newOutputStream(Paths.get(file.getAbsolutePath()))) {
-                service.files().get(file.getFile().getId()).executeMediaAndDownloadTo(outputStream);
+                service.files().get(file.getFile().getId()).executeAndDownloadTo(outputStream);
                 System.out.println("Tải xuống thành công: " + file.getFile().getName() + " (" + file.getFile().getSize() / 1024 + " KB)");
             }
         } catch (IOException e) {
             System.err.println("Lỗi khi tải xuống: " + file.getAbsolutePath());
+            e.printStackTrace();
         }
     }
 
@@ -74,7 +75,7 @@ public class DownloadService {
         }
     }
 
-    private Directory createVirtualDirectory(String path) {
+    private Directory createVirtualDirectory(String path) throws InterruptedException {
         List<String> urlList;
         try {
             urlList = getLinksFromFile();
@@ -83,42 +84,61 @@ public class DownloadService {
         }
 
         Directory vDirectory = new Directory(path, null, null);
+        ExecutorService executorService = null;
+        if (!urlList.isEmpty()) {
+            executorService = Executors.newFixedThreadPool(Math.min(urlList.size(), 8));
 
-        for (String url : urlList) {
+            for (String url : urlList) {
 
-            String id;
-            try {
-                id = extractIdFromUrl(url);
-            } catch (IllegalArgumentException e) {
-                System.err.println("URL: " + url + " không hợp lệ");
-                continue;
+                executorService.submit(() -> {
+                    String id;
+                    try {
+                        id = extractIdFromUrl(url);
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("URL: " + url + " không hợp lệ");
+                        return;
+                    }
+
+                    try {
+                        File file = service.files().get(id).setFields("id,size,name,mimeType").execute();
+                        if (isFolder(file)) {
+                            vDirectory.addSubFolder(file.getName(), file);
+                        } else {
+                            vDirectory.addFile(file.getName(), file, true);
+                        }
+                    } catch (IOException e) {
+                        System.err.println("URL:" + url + " không tồn tại hoặc bạn không có quyền truy cập");
+                    }
+                });
+
             }
-
-            try {
-                File file = service.files().get(id).setFields("id,size,name,mimeType").execute();
-                if (isFolder(file)) {
-                    vDirectory.addSubFolder(file.getName(), file);
-                } else {
-                    vDirectory.addFile(file.getName(), file, true);
-                }
-            } catch (IOException e) {
-                System.err.println("URL:" + url + " không tồn tại hoặc bạn không có quyền truy cập");
-            }
-
+            executorService.shutdown();
+            executorService.awaitTermination(999,TimeUnit.DAYS);
         }
 
-        for (Directory directory : vDirectory.getSubFolders().values()) {
-            completeDirectory(directory);
+        Collection<Directory> directories = vDirectory.getSubFolders().values();
+
+        if (!directories.isEmpty()) {
+            executorService = Executors.newFixedThreadPool(Math.min(directories.size(),8));
+
+            for (Directory directory : vDirectory.getSubFolders().values()) {
+                executorService.submit(() -> completeDirectory(directory));
+            }
+
+            executorService.shutdown();
+            executorService.awaitTermination(999,TimeUnit.DAYS);
         }
 
         return vDirectory;
+
     }
 
     private void completeDirectory(Directory parent) {
         String query = "'" + parent.getFile().getId() + "' in parents and trashed = false";
         FileList fileList;
         try {
-            fileList = service.files().list()
+            fileList = service.files()
+                    .list()
                     .setQ(query)
                     .setFields("files(id, size, name, mimeType)")
                     .execute();
@@ -175,18 +195,27 @@ public class DownloadService {
     }
 
     public void start(String destination) {
+
         System.out.println("Đang chuẩn bị dữ liệu tải xuống...");
-        Directory virtualDirectory = createVirtualDirectory(destination);
+        long startTime = System.currentTimeMillis();
+        Directory virtualDirectory;
+
+        try {
+            virtualDirectory = createVirtualDirectory(destination.replaceAll("\\\\","/"));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         long totalSize = virtualDirectory.getSize();
         System.out.println("Tổng dung lượng sẽ tải xuống: " + totalSize / 1024 / 1024 + " MB");
         if(new java.io.File(destination).getFreeSpace() <= totalSize) {
             System.err.println("Bạn không đủ dung lượng để tải xuống rồi!");
             return;
         }
-        long startTime = System.currentTimeMillis();
         fastDownload(virtualDirectory);
         long endTime = System.currentTimeMillis();
         System.out.println("Hoàn tất tải xuống toàn bộ file trong " + (endTime - startTime) + " ms");
+
     }
 
 }
