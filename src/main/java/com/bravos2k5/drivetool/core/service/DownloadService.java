@@ -10,7 +10,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
@@ -50,12 +49,11 @@ public class DownloadService {
                 System.out.println("Khởi tạo thư mục " + f.getAbsolutePath());
             }
             try(OutputStream outputStream = Files.newOutputStream(Paths.get(file.getAbsolutePath()))) {
-                service.files().get(file.getFile().getId()).executeAndDownloadTo(outputStream);
+                service.files().get(file.getFile().getId()).executeMediaAndDownloadTo(outputStream);
                 System.out.println("Tải xuống thành công: " + file.getFile().getName() + " (" + file.getFile().getSize() / 1024 + " KB)");
             }
         } catch (IOException e) {
             System.err.println("Lỗi khi tải xuống: " + file.getAbsolutePath());
-            e.printStackTrace();
         }
     }
 
@@ -84,7 +82,7 @@ public class DownloadService {
         }
 
         Directory vDirectory = new Directory(path, null, null);
-        ExecutorService executorService = null;
+        ExecutorService executorService;
         if (!urlList.isEmpty()) {
             executorService = Executors.newFixedThreadPool(Math.min(urlList.size(), 8));
 

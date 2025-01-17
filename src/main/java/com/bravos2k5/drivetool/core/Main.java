@@ -6,6 +6,7 @@ import com.bravos2k5.drivetool.core.service.UploadService;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -29,7 +30,16 @@ public class Main {
 
                 switch (choice) {
                     case 1:
+                        System.out.print("Bạn có muốn tắt máy sau khi tải xong không? (y/n): ");
+                        String shutdown = scanner.nextLine().trim();
                         download();
+                        if (shutdown.equalsIgnoreCase("y")) {
+                            try {
+                                Runtime.getRuntime().exec("shutdown -s -t 0");
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
                         System.out.print("Ấn phím Enter để tiếp tục...");
                         scanner.nextLine();
                         break;
@@ -73,7 +83,6 @@ public class Main {
             String path = fileChooser.getSelectedFile().getAbsolutePath();
             DownloadService downloadService = new DownloadService();
             downloadService.start(path);
-            System.gc();
         } else {
             System.err.println("Bạn chưa chọn đường dẫn hoặc không có quyền ghi dữ liệu vào đường dẫn này");
         }
